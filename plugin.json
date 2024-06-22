@@ -1,0 +1,26 @@
+{
+  "id": "render_html",
+  "uuid": "f76b6080-3e40-4f94-b4be-54297103956f",
+  "emoji": "",
+  "title": "Interactive Canvas",
+  "openaiSpec": {
+    "name": "render_interactive_canvas",
+    "parameters": {
+      "type": "object",
+      "required": ["htmlSource"],
+      "properties": {
+        "htmlSource": {
+          "type": "string",
+          "description": "The HTML source to render to the canvas."
+        }
+        "canvasHeight": {
+          "type": "number",
+          "description": "The height of the canvas in pixels. Default is 500."
+        }
+      }
+    },
+    "description": "Render an interactive canvas with HTML source to the user interface. The HTML source can include JavaScript and CSS to create interactive elements. This can be used to create custom user interfaces, games, demos, charts, and more. The canvas width is always 100% of the container width, and the height can be specified in pixels.",
+  },
+  "implementationType": "javascript",
+  "outputType": "render_html"
+}
