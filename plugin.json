@@ -5,7 +5,6 @@
   "title": "Interactive Canvas",
   "openaiSpec": {
     "name": "render_interactive_canvas",
-    "strict": true,
     "parameters": {
       "type": "object",
       "required": ["htmlSource"],
