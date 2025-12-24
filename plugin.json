@@ -2,6 +2,7 @@
   "id": "render_html",
   "uuid": "f76b6080-3e40-4f94-b4be-54297103956f",
   "emoji": "🔲",
+  "iconURL": "https://raw.githubusercontent.com/TypingMind/plugin-web-app-builder/refs/heads/main/icon.svg",
   "title": "Interactive Canvas",
   "openaiSpec": {
     "name": "render_interactive_canvas",
