@@ -1,3 +1,3 @@
-async function render_web_app(params, userSettings) {
+async function render_interactive_canvas(params, userSettings) {
   return params.htmlSource;
 }
