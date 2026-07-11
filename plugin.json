@@ -3,6 +3,7 @@
   "uuid": "f76b6080-3e40-4f94-b4be-54297103956f",
   "emoji": "🔲",
   "title": "Interactive Canvas",
+  "iconURL": "https://custom.typingmind.com/assets/plugins/interactive-canvas.webp",
   "openaiSpec": {
     "name": "render_interactive_canvas",
     "parameters": {
