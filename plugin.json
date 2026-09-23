@@ -30,7 +30,7 @@
         },
         "description": "Render an interactive canvas with HTML source to the user interface. The HTML source can include JavaScript and CSS to create interactive elements. This can be used to create custom user interfaces, games, demos, charts, and more. The canvas width is always 100% of the container width, and the height can be specified in pixels. Use this for the FIRST render and for full rewrites. For small follow-up tweaks to a canvas you have already rendered, prefer `update_interactive_canvas`. Use search_interactive_canvas_source and read_interactive_canvas_lines to inspect the latest source before editing. Use read_interactive_canvas_source only when you need the full source."
       },
-      "code": "async function render_interactive_canvas(params, userSettings) {\n  return params.htmlSource;\n}\n"
+      "codeFile": "render.js"
     },
     {
       "id": "8c83cae9-7b82-4fcf-a58c-beb1ede6dbd4",
@@ -71,7 +71,7 @@
         },
         "description": "Apply small, targeted edits to the most recently rendered interactive canvas instead of re-emitting the full HTML. Each edit performs an exact, literal find-and-replace on the current HTML. Use this WHENEVER you only need to tweak parts of an existing canvas you previously rendered with `render_interactive_canvas` — it is much faster and uses far fewer output tokens than re-emitting the entire HTML.\n\nRules:\n- Do NOT use this for the very first render — use `render_interactive_canvas` instead.\n- Each `oldText` must match EXACTLY ONCE in the current HTML; include enough surrounding context to make it unique. If a match is ambiguous (matches more than once) or missing, the call will fail and you should retry with more context, or fall back to `render_interactive_canvas` with the full updated HTML.\n- Edits are applied in order; later edits see the result of earlier ones.\n- Prefer many small edits over one big rewrite — it makes failures localised and easier to retry.\n- Use search_interactive_canvas_source to locate code, then read_interactive_canvas_lines for the surrounding source before choosing oldText. Line number prefixes in those results are not part of the source."
       },
-      "code": "async function update_interactive_canvas(params, userSettings, authorizedResources) {\n  var previous =\n    (authorizedResources && authorizedResources.previousRunOutput) || '';\n\n  if (typeof previous !== 'string' || !previous.length) {\n    throw new Error(\n      'No previously rendered interactive canvas found to patch. Call `render_interactive_canvas` first to render the initial HTML, then use `update_interactive_canvas` for follow-up edits.',\n    );\n  }\n\n  var edits = params && params.edits;\n  if (!Array.isArray(edits) || edits.length === 0) {\n    throw new Error(\n      '`edits` must be a non-empty array of {oldText, newText} objects.',\n    );\n  }\n\n  var html = previous;\n  for (var i = 0; i < edits.length; i++) {\n    var edit = edits[i] || {};\n    var oldText = edit.oldText;\n    var newText = edit.newText;\n\n    if (typeof oldText !== 'string' || typeof newText !== 'string') {\n      throw new Error(\n        'Edit #' +\n          (i + 1) +\n          ' must have string `oldText` and `newText` properties.',\n      );\n    }\n    if (!oldText.length) {\n      throw new Error(\n        'Edit #' +\n          (i + 1) +\n          ' has an empty `oldText`. Provide a non-empty substring to match.',\n      );\n    }\n\n    var firstIndex = html.indexOf(oldText);\n    if (firstIndex === -1) {\n      throw new Error(\n        'Edit #' +\n          (i + 1) +\n          \": `oldText` was not found in the current HTML. Make sure it is copied EXACTLY (including whitespace and casing) from the current HTML, or fall back to `render_interactive_canvas` with the full updated HTML.\",\n      );\n    }\n    var lastIndex = html.lastIndexOf(oldText);\n    if (firstIndex !== lastIndex) {\n      throw new Error(\n        'Edit #' +\n          (i + 1) +\n          \": `oldText` matched more than once in the current HTML. Include more surrounding context so it matches exactly once.\",\n      );\n    }\n\n    html =\n      html.slice(0, firstIndex) + newText + html.slice(firstIndex + oldText.length);\n  }\n\n  return html;\n}\n"
+      "codeFile": "update.js"
     },
     {
       "id": "b369f7e3-96ec-4d8c-9b86-723a5d09e5a4",
@@ -86,7 +86,7 @@
         },
         "description": "Read the full, exact HTML source of the latest interactive canvas rendered or updated by this plugin. Does not change the canvas. Attachment placeholders remain unchanged. Prefer search_interactive_canvas_source and read_interactive_canvas_lines when you only need part of a large canvas."
       },
-      "code": "async function read_interactive_canvas_source(params, userSettings, authorizedResources) {\n  const source = authorizedResources?.previousRunOutput;\n  if (typeof source !== 'string' || !source.length) {\n    throw new Error('No interactive canvas source found. Call render_interactive_canvas first.');\n  }\n  return source;\n}\n"
+      "codeFile": "read-source.js"
     },
     {
       "id": "b77c85ff-fa0d-4354-ad49-eb699a9fc01b",
@@ -117,7 +117,7 @@
         },
         "description": "Search the latest interactive canvas HTML for a literal keyword, ignoring case. Return matching lines with 1-based line numbers and the total match count. Does not change the canvas. Use read_interactive_canvas_lines to read nearby lines before editing. Line number prefixes are not part of the source."
       },
-      "code": "async function search_interactive_canvas_source(\n  params,\n  userSettings,\n  authorizedResources,\n) {\n  const source = authorizedResources?.previousRunOutput;\n  if (typeof source !== 'string' || !source.length) {\n    throw new Error('No interactive canvas source found. Call render_interactive_canvas first.');\n  }\n  if (typeof params.keyword !== 'string' || !params.keyword.trim()) {\n    throw new Error('keyword must be a non-empty string.');\n  }\n  const limit = params.limit ?? 50;\n  if (!Number.isInteger(limit) || limit < 1 || limit > 200) {\n    throw new Error('limit must be an integer from 1 to 200.');\n  }\n\n  const lines = source.split(/\\r\\n|\\n|\\r/);\n  const keyword = params.keyword.toLowerCase();\n  const matches = [];\n  let totalMatches = 0;\n  lines.forEach((line, index) => {\n    if (line.toLowerCase().includes(keyword)) {\n      totalMatches++;\n      if (matches.length < limit) {\n        matches.push(`${index + 1}: ${line}`);\n      }\n    }\n  });\n\n  return [\n    `${totalMatches} matching lines; showing ${matches.length}. Source has ${lines.length} lines.`,\n    ...matches,\n  ].join('\\n');\n}\n"
+      "codeFile": "search-source.js"
     },
     {
       "id": "58cb6d01-cad9-4e86-9c99-6262bef17af2",
@@ -147,7 +147,7 @@
         },
         "description": "Read an inclusive range of lines from the latest interactive canvas HTML, with 1-based line numbers. Does not change the canvas. endLine is capped at the final source line. Line number prefixes are not part of the source; omit them when building update_interactive_canvas edits."
       },
-      "code": "async function read_interactive_canvas_lines(params, userSettings, authorizedResources) {\n  const source = authorizedResources?.previousRunOutput;\n  if (typeof source !== 'string' || !source.length) {\n    throw new Error('No interactive canvas source found. Call render_interactive_canvas first.');\n  }\n  const { startLine, endLine } = params;\n  if (\n    !Number.isInteger(startLine) ||\n    !Number.isInteger(endLine) ||\n    startLine < 1 ||\n    endLine < startLine\n  ) {\n    throw new Error('Use integer line numbers with 1 <= startLine <= endLine.');\n  }\n\n  const lines = source.split(/\\r\\n|\\n|\\r/);\n  if (startLine > lines.length) {\n    throw new Error(\n      `startLine exceeds the source length of ${lines.length} lines.`,\n    );\n  }\n  const lastLine = Math.min(endLine, lines.length);\n  return [\n    `Lines ${startLine}-${lastLine} of ${lines.length}:`,\n    ...lines\n      .slice(startLine - 1, lastLine)\n      .map((line, index) => `${startLine + index}: ${line}`),\n  ].join('\\n');\n}\n"
+      "codeFile": "read-lines.js"
     }
   ],
   "previousRunOutputTypes": [
